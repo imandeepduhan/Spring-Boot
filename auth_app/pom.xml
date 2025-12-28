@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mandeep.path</groupId>
-	<artifactId>auth-app-backend</artifactId>
+	<artifactId>auth_app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>auth-app-backend</name>
+	<name>auth_app</name>
 	<description>authentication app using spring boot and react</description>
 	<url/>
 	<licenses>
