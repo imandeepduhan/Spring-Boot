@@ -1,7 +1,6 @@
 package com.mandeep.path.services;
 
 import com.mandeep.path.dtos.UserDto;
-import com.mandeep.path.entities.User;
 
 public interface UserService {
 
@@ -9,7 +8,7 @@ public interface UserService {
     UserDto createUser(UserDto userDto);
 
     // get user by email
-    User getUserByEmail(String email);
+    UserDto getUserByEmail(String email);
 
     // update user
     UserDto updateUser(UserDto userDto, String userId);
