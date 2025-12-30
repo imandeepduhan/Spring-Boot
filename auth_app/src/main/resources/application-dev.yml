@@ -27,6 +27,10 @@ spring:
           dialect: org.hibernate.dialect.MySQLDialet
           format_sql: true
         show-sql: true
+#jpa and hibernate configuration
 
+logging:
+  level:
+    org.springframework.security: DEBUG
 
 
