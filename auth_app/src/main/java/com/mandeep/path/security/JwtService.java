@@ -30,8 +30,9 @@ public class JwtService {
             @Value("${security.jwt.refresh-ttl-seconds}") long refreshTtlSeconds,
             @Value("${security.jwt.issuer}") String issuer
     ) {
+
         if (secret == null || secret.length() < 64) {
-            throw new IllegalArgumentException("Invalid user");
+            throw new IllegalArgumentException("Invalid JWT secret");
         }
 
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -115,5 +116,18 @@ public class JwtService {
     public String getJti(String token) {
         return parse(token).getPayload().getId();
     }
+
+    public List<String> getRoles(String token) {
+        Claims c = parse(token).getPayload();
+        return (List<String>)  c.get("roles");
+    }
+
+    public String getEmail(String token) {
+        Claims c = parse(token).getPayload();
+        return (String) c.get("email");
+    }
+
+
+
 
 }

@@ -1,52 +1,32 @@
-#development version of configuration
+# development configuration
 server:
   port: 8084
 
-  #database connections
 spring:
   datasource:
     url: JDBC:mysql://localhost:3306/auth_db
     username: root
     password: Mandeep123
 
-#    Hikari:
-#     pool-name: HikariCP
-#     maximum-pool-size: 5
-#      connection-timeout: 10000
-#      idle-timeout: 600000
-#      max-lifetime: 1800000
-#      validation-timeout: 1800000
-#      leak-detection-threshold: 0
-#     initialization-fail-timeout: -1
-
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
       hibernate:
-        ddl-auto: update
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.MySQLDialet
-          format_sql: true
-        show-sql: true
-#jpa and hibernate configuration
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
 
 logging:
   level:
     org.springframework.security: DEBUG
 
-
-
-  security:
-    jwt:
-      secret: ${JWT_SECRET:9f3b7c8a2d6e4f1a9c5b7e2d4a6f8c0b1e3d5a7c9f2b4d6e8a0c1f3b5}
-      issuer: ${JWT_ISSUER:api.mandeep.com}
-      access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:3600}
-      refresh-ttl-seconds: ${JWT_REFRESH_TTL_SECONDS:86400}
-      refresh-token-cookie-name: ${JWT_REFRESH_COOKIE_NAME:refreshToken}
-      cookie-secure: ${JWT_COOKIE_HTTP_ONLY:true}
-      cookie-same-site: ${JWT_COOKIE_SAME_SITE:lax}
-
-
-
-
-
-
+security:
+  jwt:
+    secret: 1234567890123456789012345678901234567890123456789012345678901234
+    issuer: api.mandeep.com
+    access-ttl-seconds: 3600
+    refresh-ttl-seconds: 86400
+    refresh-token-cookie-name: refreshToken
+    cookie-secure: true
+    cookie-same-site: lax
