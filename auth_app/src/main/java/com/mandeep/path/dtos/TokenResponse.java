@@ -8,8 +8,12 @@ public record TokenResponse(
         UserDto user
 ) {
 
-    public static TokenResponse TokenResponse (String accessToken, String refreshToken, long expiresIn, UserDto user) {
-        return new TokenResponse(accessToken,refreshToken,expiresIn,"Bearer",user);
+    public static TokenResponse of(
+            String accessToken,
+            String refreshToken,
+            long expiresIn,
+            UserDto user
+    ) {
+        return new TokenResponse(accessToken, refreshToken, expiresIn, "Bearer", user);
     }
-
 }
