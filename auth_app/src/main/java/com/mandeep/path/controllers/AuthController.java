@@ -66,7 +66,7 @@ public class AuthController {
                     )
             );
         } catch (Exception e) {
-            throw new BadCredentialsException("Invalid Username or Password");
+            throw new BadCredentialsException("Invalid Username or Password !!");
         }
     }
 
