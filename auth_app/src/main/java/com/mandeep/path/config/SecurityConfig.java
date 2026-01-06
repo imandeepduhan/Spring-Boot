@@ -1,15 +1,18 @@
 package com.mandeep.path.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mandeep.path.dtos.ApiError;
 import com.mandeep.path.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,32 +46,54 @@ public class SecurityConfig {
                                 ).permitAll()
                                 .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json");
-                    String message = e.getMessage();
-                    Map<String, String> errorMap = Map.of(
-                            "message", message,
-                            "statusCode", "401"
-                    );
-                    new ObjectMapper().writeValue(response.getWriter(), errorMap);
-                }))
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint((request, response, e) -> {
+
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+
+                            String message = e.getMessage();
+
+                            String error = (String) request.getAttribute("error");
+                            if (error != null) {
+                                message = error;
+                            }
+
+                            /*
+                            Map<String, Object> errorMap = Map.of(
+                                    "message", message,
+                                    "statusCode", "404"
+                            );
+                            new ObjectMapper().writeValue(response.getWriter(), errorMap);
+                            */
+
+                            var apiError = ApiError.of(
+                                    HttpStatus.UNAUTHORIZED.value(),
+                                    "Unauthorized Access",
+                                    message,
+                                    request.getRequestURI(),true
+                            );
+
+                            var objectMapper = new ObjectMapper();
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(apiError)
+                            );
+                        })
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration
-    ) throws Exception {
-        return configuration.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
