@@ -29,4 +29,6 @@ security:
     refresh-ttl-seconds: 86400
     refresh-token-cookie-name: refreshToken
     cookie-secure: true
+    cookie-http-only: true
     cookie-same-site: lax
+    cookie-domain: .substring.com

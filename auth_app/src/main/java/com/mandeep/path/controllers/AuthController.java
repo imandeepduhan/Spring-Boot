@@ -7,8 +7,10 @@ import com.mandeep.path.entities.RefreshToken;
 import com.mandeep.path.entities.User;
 import com.mandeep.path.repositories.RefreshTokenRepository;
 import com.mandeep.path.repositories.UserRepository;
+import com.mandeep.path.security.CookieService;
 import com.mandeep.path.security.JwtService;
 import com.mandeep.path.services.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
@@ -36,10 +38,11 @@ public class AuthController {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final ModelMapper mapper;
+    private final CookieService cookieService;
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
-            @RequestBody LoginRequest loginRequest
+            @RequestBody LoginRequest loginRequest, HttpServletResponse response
     ) {
 
         // authenticate
@@ -68,6 +71,10 @@ public class AuthController {
         // access token --> generate token
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user, refreshTokenOb.getJti());
+
+        //use cookie service to attach refresh token in cookie
+        cookieService.attachRefreshCookie(response, refreshToken, (int)jwtService.getRefreshTtlSeconds());
+        cookieService.addNoStoreHeaders(response);
 
         TokenResponse tokenResponse = TokenResponse.of(
                 accessToken,
