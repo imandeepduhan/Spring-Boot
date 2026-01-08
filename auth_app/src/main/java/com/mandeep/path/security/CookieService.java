@@ -3,6 +3,7 @@ package com.mandeep.path.security;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -18,23 +19,30 @@ public class CookieService {
     private final String cookieDomain;
     private final String cookieSameSite;
 
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(CookieService.class);
+
 
     public CookieService(
 
             @Value("${security.jwt.refresh-token-cookie-name}") String refreshTokenCookieName,
             @Value("${security.jwt.cookie-http-only}") boolean cookieHttpOnly,
             @Value("${security.jwt.cookie-secure}") boolean cookieSecure,
-            @Value("${security.jwt.cookie-domain}") String cookieDomain,
-            @Value("${security.jwt.cookie-same-site}") String cookieSameSite) {
+            @Value("${security.jwt.cookie-same-site}") String cookieSameSite,
+            @Value("${security.jwt.cookie-domain}") String cookieDomain
+    ) {
         this.refreshTokenCookieName = refreshTokenCookieName;
         this.cookieHttpOnly = cookieHttpOnly;
         this.cookieSecure = cookieSecure;
         this.cookieDomain = cookieDomain;
         this.cookieSameSite = cookieSameSite;
+
+
     }
 
     // create method to attach cookie to response
     public void attachRefreshCookie(HttpServletResponse response, String value, int maxAge) {
+
+        logger.info("Attaching cookie with name: {} and value: {}", refreshTokenCookieName, value);
 
         var responseCookieBuilder = ResponseCookie.from(refreshTokenCookieName, value)
                 .httpOnly(cookieHttpOnly)
