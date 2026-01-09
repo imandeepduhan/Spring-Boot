@@ -11,6 +11,7 @@ import com.mandeep.path.repositories.UserRepository;
 import com.mandeep.path.security.CookieService;
 import com.mandeep.path.security.JwtService;
 import com.mandeep.path.services.AuthService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -133,14 +135,60 @@ public class AuthController {
             throw new BadCredentialsException("Refresh token expired");
         }
 
-        if(storedRefreshToken.getUser().getId().equals(userId)) {
+        if(!storedRefreshToken.getUser().getId().equals(userId)) {
             throw new BadCredentialsException("Refresh token does not belong to this user");
         }
 
         // refresh token ko rotate :
         storedRefreshToken.setRevoked(true);
         String newJti = UUID.randomUUID().toString();
-        storedRefreshToken.setReplacedByToken(new );
+        storedRefreshToken.setReplacedByToken(newJti);
+        refreshTokenRepository.save(storedRefreshToken);
+
+        User user = storedRefreshToken.getUser();
+
+        var newRefreshTokenOb = RefreshToken.builder()
+                .jti(newJti)
+                .user(user)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(jwtService.getRefreshTtlSeconds()))
+                .revoked(false)
+                .build();
+
+        refreshTokenRepository.save(newRefreshTokenOb);
+        String newAccessToken = jwtService.generateAccessToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user, newRefreshTokenOb.getJti());
+
+
+
+        cookieService.attachRefreshCookie(response, newRefreshToken, (int) jwtService.getRefreshTtlSeconds());
+        cookieService.addNoStoreHeaders(response);
+        return ResponseEntity.ok(TokenResponse.of(newAccessToken, newRefreshToken, jwtService.getAccessTtlSeconds(),
+                mapper.map(user, UserDto.class)));
+
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        readRefreshTokenFromRequest(null , request).ifPresent(token-> {
+            try {
+                if(jwtService.isRefreshToken(token)) {
+                    String jti = jwtService.getJti(token);
+                    refreshTokenRepository.findByJti(jti).ifPresent(rt-> {
+                        rt.setRevoked(true);
+                        refreshTokenRepository.save(rt);
+                    });
+                }
+            }catch (JwtException ignored) {
+
+            }
+        });
+
+        // use CookieUtil(same behavior)
+        cookieService.clearRefreshCookie(response);
+        cookieService.addNoStoreHeaders(response);
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     // this method will read refresh token from request header or body
