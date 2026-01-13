@@ -74,5 +74,5 @@ security:
 app:
   auth:
     frontend:
-    success-redirect: http://localhost:5173/auth/success
-    failure-redirect: http://localhost:5173/auth/success
+      success-redirect: http://localhost:5173/auth/success
+      failure-redirect: http://localhost:5173/auth/failure
