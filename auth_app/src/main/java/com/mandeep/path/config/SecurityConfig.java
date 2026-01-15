@@ -90,4 +90,21 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.front-end-url}") String corsUrls
+    ) {
+
+        String[] urls = corsUrls.trim().split(",");
+        var config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList(urls));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH","HEAD"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",config);
+        return source;
+    }
+
 }

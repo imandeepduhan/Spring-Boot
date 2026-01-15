@@ -2,9 +2,84 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { da } from "date-fns/locale";
 import { Github, Mail, User } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import toast from "react-hot-toast";
+import type RegisterData from "@/models/RegisterData";
+import { registerUser } from "@/services/AuthServices";
+import { useNavigate } from "react-router";
 
 function Signup() {
+
+  const [data,setData]=useState({
+    name:'',
+    email:'',
+    password:"",
+  });
+
+ 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error,setError]=useState(null);
+
+  const navigate = useNavigate();
+
+   // txt input , email , password, number, textarea
+   // handling form change
+  const handleInputChange=(event:React.ChangeEvent<HTMLInputElement>) => {
+  //  console.log(event.target.name);
+   // console.log(event.target.value);
+    setData((value)=>({
+      ...value,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  // handling form submit:
+  const handleFormSubmit= async (event:React.FormEvent)=>{
+    event.preventDefault();
+    console.log(data);
+
+    // validations
+    if(data.name.trim() === "") {
+      toast.error("Name is required!");
+      return;
+    }
+
+    if(data.email.trim() === "") {
+      toast.error("Email is required!");
+      return;
+    }
+
+    if(data.password.trim() === "") {
+      toast.error("Password is required!");
+      return;
+    }
+
+    //form submit for registrations
+    try{
+
+      const result = await registerUser(data);
+      console.log(result);
+      toast.success("User register successfully...");
+      setData({
+          name:'',
+          email:'',
+          password:"",
+      });
+      // navigate login page
+      navigate("/login");
+
+    }catch(error){
+
+      console.log(error);
+      toast.error("Error in registering the user...");
+
+    }
+    
+
+  };
+
     return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-black dark:via-slate-900 dark:to-slate-800 px-4">
       <Card className="w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200 dark:border-slate-700 shadow-xl">
@@ -22,15 +97,20 @@ function Signup() {
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
               id="name"
               type="text"
               placeholder="John Doe"
               className="bg-white dark:bg-slate-800"
+              name="name"
+              value={data.name}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -42,6 +122,9 @@ function Signup() {
               type="email"
               placeholder="you@example.com"
               className="bg-white dark:bg-slate-800"
+              name="email"
+              value={data.email}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -53,6 +136,9 @@ function Signup() {
               type="password"
               placeholder="••••••••"
               className="bg-white dark:bg-slate-800"
+              name="password"
+              value={data.password}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -89,7 +175,7 @@ function Signup() {
               Sign in
             </span>
           </p>
-        </CardContent>
+        </form>
       </Card>
     </div>
   );
