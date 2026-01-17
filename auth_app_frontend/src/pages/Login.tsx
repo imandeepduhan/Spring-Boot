@@ -11,68 +11,68 @@ import { loginUser } from "@/services/AuthServices";
 import { useNavigate } from "react-router";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import useAuth from "@/auth/store";
 
 
- function Login() {
-
+function Login() {
   const [loginData, setLoginData] = useState<LoginData>({
-    email:"",
-    password:"",
+    email: "",
+    password: "",
   });
 
-  const[loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
 
-  const navigate =useNavigate();
+  const navigate = useNavigate();
+  const login = useAuth((state) => state.login);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-
     setLoginData({
       ...loginData,
       [event.target.name]: event.target.value,
     });
   };
-
-  const handleFormSubmit= async (event:FormEvent)=> {
+const handleFormSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     //validation:
-    if(loginData.email.trim()==='') {
+    if (loginData.email.trim() === "") {
       toast.error("Input required !");
       return;
     }
-    if(loginData.password.trim()==='') {
+    if (loginData.password.trim() === "") {
       toast.error("Input required !");
       return;
     }
 
     //server call for login
- //   console.log(event.target);
- //   console.log(loginData);
-
-    try {
+    // console.log(event.target);
+    // console.log(loginData);
+      try {
       setLoading(true);
-      const userInfo = await loginUser(loginData);
-      toast.success("Login success");
-      console.log(userInfo);
-      navigate('/dashboard');
-      // save the current user logged in informations
-      // localstorage
+      // const userInfo = await loginUser(loginData);
 
-    }catch(error:any) {
+      //login function : useAuth
+      await login(loginData);
+      toast.success("Login success");
+      // console.log(userInfo);
+      navigate("/dashboard");
+
+      //save the current user logged in informations
+      //localstorage
+    } catch (error: any) {
       console.log(error);
-      setError(error);
+
       toast.error("Error !!");
-      if(error?.status==400) {
+      if (error?.status == 400) {
         setError(error);
-      }else {
+      } else {
         setError(error);
       }
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-black dark:via-slate-900 dark:to-slate-800 px-4">
       <Card className="w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200 dark:border-slate-700 shadow-xl">
