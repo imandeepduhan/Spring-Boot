@@ -1,6 +1,6 @@
 import React, { use } from "react";
 import { Button } from "./button";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import useAuth from "@/auth/store";
 
 function Navbar() {
@@ -8,6 +8,7 @@ function Navbar() {
     const checkLogin = useAuth((state) => state.checkLogin);
     const user = useAuth((state) => state.user);
     const logout = useAuth((state) => state.logout);
+    const navigate = useNavigate();
     return (
         <nav className="
   flex md:flex-row flex-col items-center justify-between
@@ -39,7 +40,7 @@ function Navbar() {
                             <Button
                                 onClick={() => {
                                     logout();
-                                  //  navigate("/");
+                                    navigate("/");
                                 }}
                                 size={"sm"}
                                 className="cursor-pointer"
