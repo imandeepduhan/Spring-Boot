@@ -2,85 +2,79 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { da } from "date-fns/locale";
-import { Github, Mail, User } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import type { LoginData } from "../models/LoginData";
+import { CheckCircle2Icon, Github, Mail } from "lucide-react";
+import React, { useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
-import type RegisterData from "@/models/RegisterData";
-import { registerUser } from "@/services/AuthServices";
+import { tr } from "date-fns/locale";
+import { loginUser } from "@/services/AuthServices";
 import { useNavigate } from "react-router";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+import useAuth from "@/auth/store";
+import OAuth2Buttons from "@/components/ui/OAuth2Buttons";
 
-function Signup() {
 
-  const [data,setData]=useState({
-    name:'',
-    email:'',
-    password:"",
+function Login() {
+  const [loginData, setLoginData] = useState<LoginData>({
+    email: "",
+    password: "",
   });
 
- 
   const [loading, setLoading] = useState<boolean>(false);
-  const [error,setError]=useState(null);
+  const [error, setError] = useState<any>(null);
 
   const navigate = useNavigate();
+  const login = useAuth((state) => state.login);
 
-   // txt input , email , password, number, textarea
-   // handling form change
-  const handleInputChange=(event:React.ChangeEvent<HTMLInputElement>) => {
-  //  console.log(event.target.name);
-   // console.log(event.target.value);
-    setData((value)=>({
-      ...value,
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginData({
+      ...loginData,
       [event.target.name]: event.target.value,
-    }));
+    });
   };
-
-  // handling form submit:
-  const handleFormSubmit= async (event:React.FormEvent)=>{
+const handleFormSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    console.log(data);
 
-    // validations
-    if(data.name.trim() === "") {
-      toast.error("Name is required!");
+    //validation:
+    if (loginData.email.trim() === "") {
+      toast.error("Input required !");
+      return;
+    }
+    if (loginData.password.trim() === "") {
+      toast.error("Input required !");
       return;
     }
 
-    if(data.email.trim() === "") {
-      toast.error("Email is required!");
-      return;
-    }
+    //server call for login
+    // console.log(event.target);
+    // console.log(loginData);
+      try {
+      setLoading(true);
+      // const userInfo = await loginUser(loginData);
 
-    if(data.password.trim() === "") {
-      toast.error("Password is required!");
-      return;
-    }
+      //login function : useAuth
+      await login(loginData);
+      toast.success("Login success");
+      // console.log(userInfo);
+      navigate("/dashboard");
 
-    //form submit for registrations
-    try{
-
-      const result = await registerUser(data);
-      console.log(result);
-      toast.success("User register successfully...");
-      setData({
-          name:'',
-          email:'',
-          password:"",
-      });
-      // navigate login page
-      navigate("/login");
-
-    }catch(error){
-
+      //save the current user logged in informations
+      //localstorage
+    } catch (error: any) {
       console.log(error);
-      toast.error("Error in registering the user...");
 
+      toast.error("Error !!");
+      if (error?.status == 400) {
+        setError(error);
+      } else {
+        setError(error);
+      }
+    } finally {
+      setLoading(false);
     }
-    
-
   };
-
-    return (
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-black dark:via-slate-900 dark:to-slate-800 px-4">
       <Card className="w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200 dark:border-slate-700 shadow-xl">
         <CardHeader className="text-center space-y-2">
@@ -90,30 +84,25 @@ function Signup() {
           </div>
 
           <CardTitle className="text-2xl font-bold">
-            Create your account
+            Welcome back
           </CardTitle>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Get started with secure authentication
+            Login to access your futuristic authentication app
           </p>
+            {error &&(
+              <div className="mt-1">
+              <Alert variant={"destructive"}>
+                <CheckCircle2Icon/>
+                <AlertTitle>{
+                  error?.response ? error?.response?.data?.message: error?.message
+                  }</AlertTitle>
+              </Alert>
+            </div>
+            )}
+
         </CardHeader>
 
-        
         <form onSubmit={handleFormSubmit} className="space-y-6">
-
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Doe"
-              className="bg-white dark:bg-slate-800"
-              name="name"
-              value={data.name}
-              onChange={handleInputChange}
-            />
-          </div>
-
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -123,7 +112,7 @@ function Signup() {
               placeholder="you@example.com"
               className="bg-white dark:bg-slate-800"
               name="email"
-              value={data.email}
+              value={loginData.email}
               onChange={handleInputChange}
             />
           </div>
@@ -137,14 +126,19 @@ function Signup() {
               placeholder="••••••••"
               className="bg-white dark:bg-slate-800"
               name="password"
-              value={data.password}
+              value={loginData.password}
               onChange={handleInputChange}
             />
           </div>
 
-          {/* Signup Button */}
-          <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-black">
-            Create Account
+          {/* Login Button */}
+          <Button disabled={loading}
+           className="w-full cursor-pointer bg-cyan-500 hover:bg-cyan-600 text-black">
+            {loading ?(<><Spinner /> Please wait...
+            </> ): (
+            "Login"
+            )}
+  
           </Button>
 
           {/* Divider */}
@@ -155,31 +149,20 @@ function Signup() {
             <div className="absolute inset-0 top-1/2 border-t border-slate-200 dark:border-slate-700" />
           </div>
 
-          {/* OAuth */}
-          <div className="space-y-3">
-            <Button variant="outline" className="w-full flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Continue with Google
-            </Button>
-
-            <Button variant="outline" className="w-full flex items-center gap-2">
-              <Github className="h-4 w-4" />
-              Continue with GitHub
-            </Button>
-          </div>
+          {/* OAuth Buttons */}
+          <OAuth2Buttons />
 
           {/* Footer */}
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-            Already have an account?{" "}
+            Don’t have an account?{" "}
             <span className="text-cyan-500 hover:underline cursor-pointer">
-              Sign in
+              Sign up
             </span>
           </p>
         </form>
       </Card>
     </div>
   );
-    
 }
 
-export default Signup;
+export default Login;

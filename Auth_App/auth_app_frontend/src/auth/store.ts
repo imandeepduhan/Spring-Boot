@@ -1,8 +1,7 @@
-
-import type {LoginData }from "@/models/LoginData";
+import type { LoginData } from "@/models/LoginData";
 import type LoginResponseData from "@/models/LoginResponseData";
 import type User from "@/models/User";
-import { loginUser, logoutUser } from "@/services/AuthServices";
+import { loginUser,logoutUser } from "@/services/AuthServices";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
